@@ -39,7 +39,7 @@ def main():
     
     keys = r.smembers("resque:workers")
     pids = [(int(k.split(":")[1]), k) for k in keys]
-    for pid, key in pids
+    for pid, key in pids:
         if not is_alive(pid):       
             print "worker", key, "is dead, remove from worker set"
             r.srem('resque:workers', key)
