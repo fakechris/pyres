@@ -80,6 +80,41 @@ class Worker(object):
         hostname = os.uname()[1]
         return '%s:%s:%s' % (hostname, self.pid, ','.join(self.queues))
          
+    def batch_work(self, interval=5, max_requests=100):
+        self.register_signal_handlers()        
+        while True:
+            if self._shutdown:
+                print 'shutdown scheduled'
+                break
+            
+            self.child = os.fork()
+            if self.child:
+                print 'Forked %s at %s' % (self.child, datetime.datetime.now())
+                try:
+                    os.waitpid(self.child, 0)
+                except OSError, ose:
+                    import errno
+                    if ose.errno != errno.EINTR:
+                        raise ose
+                #os.wait()
+                print 'Done waiting'
+            else:
+                self.register_worker()
+                requestCount = 0
+                while requestCount < max_requests:
+                    job = self.reserve()
+                    if job:
+                        requestCount += 1
+                        print 'Processing %s since %s' % (job._queue, datetime.datetime.now())
+                        self.process(job)
+                    else:
+                        if interval == 0:
+                            break
+                        time.sleep(interval)
+                self.unregister_worker()
+                os._exit(0)
+            self.child = None            
+            
     def work(self, interval=5):
         self.startup()
         while True:
@@ -180,7 +215,12 @@ class Worker(object):
     
     def state(self):
         return 'working' if self.resq.redis.exists('resque:worker:%s' % self) else 'idle'
-    
+
+    @classmethod
+    def batch_run(cls, queues, server, inteval=5, maxrequests=100):
+        worker = cls(queues=queues, server=server)
+        worker.batch_work(inteval=inteval, maxrequests=maxrequests)
+        
     @classmethod
     def run(cls, queues, server):
         worker = cls(queues=queues, server=server)
