@@ -22,12 +22,27 @@ def main():
         
     hostname = os.uname()[1]
     r = Redis(options.host,options.port)
+    
     keys = r.keys("resque:worker:%s:*" % hostname)
     pids = [(int(k.split(":")[3]), k) for k in keys]
     for pid, key in pids:
         if not is_alive(pid):
-            print "worker", key, "is dead, deleting"
+            print "worker", key, "is dead, deleting key"
             r.delete(key)
+            
+    keys = r.keys("resque:stat:*" )
+    pids = [(int(k.split(":")[4]), k) for k in keys if len(k.split(":"))==6]
+    for pid, key in pids:
+        if not is_alive(pid):
+            print "worker stat", key, "is dead, deleting key"
+            r.delete(key)
+    
+    keys = r.smembers("resque:workers")
+    pids = [(int(k.split(":")[1]), k) for k in keys]
+    for pid, key in pids
+        if not is_alive(pid):       
+            print "worker", key, "is dead, remove from worker set"
+            r.srem('resque:workers', key)
         
 if __name__ == "__main__":
     main()
