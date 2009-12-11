@@ -217,9 +217,9 @@ class Worker(object):
         return 'working' if self.resq.redis.exists('resque:worker:%s' % self) else 'idle'
 
     @classmethod
-    def batch_run(cls, queues, server, interval=5, maxrequests=100):
+    def batch_run(cls, queues, server, interval=5, max_requests=100):
         worker = cls(queues=queues, server=server)
-        worker.batch_work(interval=interval, maxrequests=maxrequests)
+        worker.batch_work(interval=interval, max_requests=max_requests)
         
     @classmethod
     def run(cls, queues, server):
