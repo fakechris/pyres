@@ -8,9 +8,9 @@ def is_alive(pid):
         os.kill(pid)
         return True
     except OSError, e:
-        if e.errno == 3: return True
-        elif e.errno == 1: return False #permission denied
-        else: return False #raise
+        if e.errno == 3: return False
+        elif e.errno == 1: return True #permission denied
+        else: raise e
 
 def main():
     from optparse import OptionParser
@@ -26,6 +26,7 @@ def main():
     pids = [(int(k.split(":")[3]), k) for k in keys]
     for pid, key in pids:
         if not is_alive(pid):
+            print "worker", key, "is dead, deleting"
             r.delete(key)
         
 if __name__ == "__main__":
