@@ -99,6 +99,7 @@ class Worker(object):
                 #os.wait()
                 print 'Done waiting'
             else:
+                self.pid = os.getpid() # child process should update pid
                 self.register_worker()
                 requestCount = 0
                 while requestCount < max_requests:
@@ -163,7 +164,7 @@ class Worker(object):
     
     def reserve(self):
         for q in self.queues:
-            print "Checking %s" % q
+            #print "Checking %s" % q
             job = Job.reserve(q, self.resq, self.__str__())
             if job:
                 print "Found job on %s" % q
