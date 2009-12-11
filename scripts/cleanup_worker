@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+
+import os
+from redis import Redis
+
+def is_alive(pid):
+	try:
+		os.kill(pid)
+		return True
+	except OSError, e:
+		if e.errno == 3: return True
+		elif e.errno == 1: return False #permission denied
+		else: return False #raise
+
+def main():
+	from optparse import OptionParser
+    usage = "usage: %prog [options]"
+    parser = OptionParser(usage)
+    parser.add_option("--host", dest="host", default="localhost")
+    parser.add_option("--port",dest="port",type="int", default=6379)
+    (options,args) = parser.parse_args()
+	    
+	hostname = os.uname()[1]
+	r = Redis(options.host,options.port)
+	keys = r.keys("resque:worker:%s:*" % hostname)
+	pids = [(int(k.split(":")[3]), k) for k in keys]
+	for pid, key in pids:
+		if not is_alive(pid):
+			r.delete(key)
+		
+if __name__ == "__main__":
+    main()
