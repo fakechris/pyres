@@ -8,12 +8,15 @@ import time
 import simplejson
 
 class Worker(object):
-    def __init__(self, queues=[], server="localhost:6379", password=None):
+    def __init__(self, queues=[], 
+                 server="localhost:6379", password=None,
+                 verbose=False):
         self.queues = queues
         self.validate_queues()
         self._shutdown = False
         self.child = None
         self.pid = os.getpid()
+        self.verbose = verbose
         if isinstance(server,basestring):
             self.resq = ResQ(server=server, password=password)
         elif isinstance(server, ResQ):
@@ -106,7 +109,8 @@ class Worker(object):
                     job = self.reserve()
                     if job:
                         requestCount += 1
-                        print 'Processing %s since %s' % (job._queue, datetime.datetime.now())
+                        if self.verbose:
+                            print 'Processing %s since %s' % (job._queue, datetime.datetime.now())
                         self.process(job)
                     else:
                         if interval == 0:
@@ -158,7 +162,8 @@ class Worker(object):
             job.fail(e)
             self.failed()
         else:
-            print "done: %s" % job
+            if self.verbose:
+                print "done: %s" % job
         finally:
             self.done_working()
     
@@ -167,11 +172,13 @@ class Worker(object):
             #print "Checking %s" % q
             job = Job.reserve(q, self.resq, self.__str__())
             if job:
-                print "Found job on %s" % q
+                if self.verbose:
+                    print "Found job on %s" % q
                 return job
     
     def working_on(self, job):
-        print 'marking as working on'
+        if self.verbose:
+            print 'marking as working on'
         data = {
             'queue': job._queue,
             'run_at': str(datetime.datetime.now()),
@@ -179,11 +186,13 @@ class Worker(object):
         }
         data = simplejson.dumps(data)
         self.resq.redis["resque:worker:%s" % str(self)] = data
-        print "worker:%s" % str(self)
+        if self.verbose:
+            print "worker:%s" % str(self)
         print self.resq.redis["resque:worker:%s" % str(self)]
     
     def done_working(self):
-        print 'done working'
+        if self.verbose:
+            print 'done working'
         self.processed()
         self.resq.redis.delete("resque:worker:%s" % str(self))
     
