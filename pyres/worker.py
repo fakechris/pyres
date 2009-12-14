@@ -47,9 +47,9 @@ class Worker(object):
     
     def unregister_worker(self):
         self.resq.redis.srem('resque:workers',str(self))
-        self.resq.redis.delete('resque:worker:%s:started' % self)
-        Stat.clear('processed:%s' % self)
-        Stat.clear('failed:%s' % self)
+        self.resq.redis.delete('resque:worker:%s:started' % str(self))
+        Stat("processed:%s" % str(self), self.resq).clear()
+        Stat("failed:%s" % str(self), self.resq).clear()
         self.started = None
     
     def startup(self):
