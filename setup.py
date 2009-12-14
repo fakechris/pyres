@@ -8,5 +8,5 @@ setup(name='PyRes',
       url='http://github.com/binarydud/pyres',
       packages=['pyres', 'resweb'],
       package_data={'resweb': ['templates/*.mustache','media/*']},
-      scripts=['scripts/pyres_worker', 'scripts/pyres_web']
+      scripts=['scripts/pyres_worker', 'scripts/pyres_web', 'scripts/cleanup_worker']
 )
