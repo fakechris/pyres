@@ -206,10 +206,8 @@ class Worker(object):
         return Stat("processed:%s" % str(self), self.resq).get()
     
     def failed(self):
-        total_failed = Stat("failed", self.resq)
-        stat = Stat("failed:%s" % self, self.resq)
-        total_failed.incr()
-        stat.incr()
+        Stat("failed", self.resq).incr()
+        Stat("failed:%s" % self, self.resq).incr()
         
     def get_failed(self):
         return Stat("failed:%s" % self, self.resq).get()
