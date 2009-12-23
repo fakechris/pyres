@@ -30,7 +30,7 @@ def main():
             print "worker", key, "is dead, deleting key"
             r.delete(key)
             
-    keys = r.keys("resque:stat:*" )
+    keys = r.keys("resque:stat:%s:*" % hostname)
     pids = [(int(k.split(":")[4]), k) for k in keys if len(k.split(":"))==6]
     for pid, key in pids:
         if not is_alive(pid):
@@ -38,9 +38,9 @@ def main():
             r.delete(key)
     
     keys = r.smembers("resque:workers")
-    pids = [(int(k.split(":")[1]), k) for k in keys]
-    for pid, key in pids:
-        if not is_alive(pid):       
+    pids = [(int(k.split(":")[1]), k.split(":")[0], k) for k in keys]
+    for pid, hname, key in pids:
+        if not is_alive(pid) and hname==hostname:       
             print "worker", key, "is dead, remove from worker set"
             r.srem('resque:workers', key)
         
